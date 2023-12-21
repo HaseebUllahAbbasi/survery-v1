@@ -1,13 +1,15 @@
 const mongoose = require("mongoose");
 
-async function connectDatabase() {
-  await mongoose
-    .connect("mongodb://127.0.0.1:27017/todo-app")
-    .then(() => {
-      console.log("database is connected");
+const connectDatabase = () => {
+  mongoose
+    .connect(process.env.DB_URI, {
+      dbName: "Simple-Assessment",
+      useNewUrlParser: true,
+      // useUnifiedTopology: true,
     })
-    .catch((e) => console.log(e));
-  // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
-}
-module.exports = connectDatabase; // default
-// module.exports = {connectDatabase}// named export
+    .then((con) => {
+      console.log(`Database is connected on ${con.connection.host}`);
+    })
+    .catch((e) => console.error(e));
+};
+module.exports = connectDatabase;
