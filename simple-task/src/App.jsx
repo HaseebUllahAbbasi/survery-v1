@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { getSectors } from "./services/api/sector";
 const CustomSelect = ({ options, selectedValues, onChange }) => {
   const renderOptions = (option, level) => {
     return (
-      <React.Fragment key={option.value}>
-        <option value={option.value}>
+      <React.Fragment key={option._id}>
+        <option value={option._id}>
           {Array(level).fill("\u00a0\u00a0")}
-          {option.label}
+          {option.name}
         </option>
         {option.children &&
           option.children.length > 0 &&
@@ -43,10 +44,12 @@ const App = () => {
   const [selectedSectors, setSelectedSectors] = useState([]);
   const [sessionId, setSessionId] = useState("");
 
+  const [sectors, setSectors] = useState();
   // Options array
   const sectorOptions = [
     {
       value: "1",
+
       label: "Manufacturing",
     },
     {
@@ -183,10 +186,16 @@ const App = () => {
         },
       ],
     },
-    // Continue adding more options...
   ];
+
+  const fetchSectors = async () => {
+    const sectors = await getSectors();
+    setSectors(sectors);
+  };
   useEffect(() => {
+    fetchSectors();
     const storedSessionId = sessionStorage.getItem("sessionId");
+
     const storedName = sessionStorage.getItem("name");
     const storedSelectedSectors = sessionStorage.getItem("selectedSectors");
 
@@ -236,7 +245,7 @@ const App = () => {
       <label>
         Sectors:
         <CustomSelect
-          options={sectorOptions}
+          options={sectors}
           selectedValues={selectedSectors}
           onChange={handleSectorChange}
         />
