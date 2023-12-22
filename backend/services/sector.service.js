@@ -46,6 +46,7 @@ const buildSectorTree = (sectors, parentId) => {
 };
 
 module.exports = {
+  buildSectorTree,
   createSector,
   getSectorById,
   getAllSectors,

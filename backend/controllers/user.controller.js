@@ -9,7 +9,7 @@ const createUser = catchAsyncError(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    data: savedUserData,
+    user: savedUserData,
   });
 });
 
@@ -28,7 +28,6 @@ const updateUserById = catchAsyncError(async (req, res) => {
 
   const updatedUserData = await userService.updateUserById(
     id,
-    userId,
     name,
     sectors,
     agreed
@@ -43,10 +42,7 @@ const updateUserById = catchAsyncError(async (req, res) => {
 const getAllUsers = catchAsyncError(async (req, res) => {
   const users = await userService.getAllUsers();
 
-  res.status(200).json({
-    success: true,
-    data: users,
-  });
+  res.status(200).json(users);
 });
 
 module.exports = {

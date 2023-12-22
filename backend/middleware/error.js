@@ -1,4 +1,5 @@
 const handleError = (err, req, res, next) => {
+  console.log(err);
   err.statusCode = err.statusCode || 500;
   if (
     process.env.MODE.toLocaleLowerCase() === "DEVELOPMENT".toLocaleLowerCase()
