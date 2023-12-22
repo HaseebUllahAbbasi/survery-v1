@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { getSectors } from "./services/api/sector";
+import { getUsers } from "./services/api/user";
+
 const CustomSelect = ({ options, selectedValues, onChange }) => {
   const renderOptions = (option, level) => {
     return (
@@ -43,157 +45,22 @@ const App = () => {
   const [name, setName] = useState("");
   const [selectedSectors, setSelectedSectors] = useState([]);
   const [sessionId, setSessionId] = useState("");
-
-  const [sectors, setSectors] = useState();
+  const [users, setUsers] = useState([]);
+  const [sectors, setSectors] = useState([]);
   // Options array
-  const sectorOptions = [
-    {
-      value: "1",
-
-      label: "Manufacturing",
-    },
-    {
-      value: "19",
-      label: "Construction materials",
-    },
-    {
-      value: "18",
-      label: "Electronics and Optics",
-    },
-    {
-      value: "6",
-      label: "Food and Beverage",
-      children: [
-        {
-          value: "342",
-          label: "Bakery & confectionery products",
-        },
-        {
-          value: "43",
-          label: "Beverages",
-        },
-        {
-          value: "42",
-          label: "Fish & fish products",
-        },
-        {
-          value: "40",
-          label: "Meat & meat products",
-        },
-        {
-          value: "39",
-          label: "Milk & dairy products",
-        },
-        {
-          value: "437",
-          label: "Other",
-        },
-        {
-          value: "378",
-          label: "Sweets & snack food",
-        },
-      ],
-    },
-    {
-      value: "13",
-      label: "Furniture",
-      children: [
-        {
-          value: "389",
-          label: "Bathroom/sauna",
-        },
-        {
-          value: "385",
-          label: "Bedroom",
-        },
-        {
-          value: "390",
-          label: "Children’s room",
-        },
-        {
-          value: "98",
-          label: "Kitchen",
-        },
-        {
-          value: "101",
-          label: "Living room",
-        },
-        {
-          value: "392",
-          label: "Office",
-        },
-        {
-          value: "394",
-          label: "Other (Furniture)",
-        },
-        {
-          value: "341",
-          label: "Outdoor",
-        },
-        {
-          value: "99",
-          label: "Project furniture",
-        },
-      ],
-    },
-    {
-      value: "12",
-      label: "Machinery",
-      children: [
-        {
-          value: "94",
-          label: "Machinery components",
-        },
-        {
-          value: "91",
-          label: "Machinery equipment/tools",
-        },
-        {
-          value: "224",
-          label: "Manufacture of machinery",
-        },
-        {
-          value: "97",
-          label: "Maritime",
-          children: [
-            {
-              value: "271",
-              label: "Aluminium and steel workboats",
-            },
-            {
-              value: "269",
-              label: "Boat/Yacht building",
-            },
-            {
-              value: "230",
-              label: "Ship repair and conversion",
-            },
-          ],
-        },
-        {
-          value: "93",
-          label: "Metal structures",
-          children: [
-            {
-              value: "508",
-              label: "Other",
-            },
-          ],
-        },
-        {
-          value: "227",
-          label: "Repair and maintenance service",
-        },
-      ],
-    },
-  ];
 
   const fetchSectors = async () => {
     const sectors = await getSectors();
     setSectors(sectors);
   };
+  const fetchUsers = async () => {
+    const users = await getUsers();
+    setUsers(users);
+  };
+
   useEffect(() => {
     fetchSectors();
+    fetchUsers();
     const storedSessionId = sessionStorage.getItem("sessionId");
 
     const storedName = sessionStorage.getItem("name");
@@ -230,8 +97,12 @@ const App = () => {
     console.log("Selected Sectors:", selectedSectors);
   };
   useEffect(() => {
-    sessionStorage.setItem("name", name);
-    sessionStorage.setItem("selectedSectors", JSON.stringify(selectedSectors));
+    if (name) sessionStorage.setItem("name", name);
+    if (selectedSectors.length > 0)
+      sessionStorage.setItem(
+        "selectedSectors",
+        JSON.stringify(selectedSectors)
+      );
   }, [name, selectedSectors]);
 
   return (

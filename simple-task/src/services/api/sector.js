@@ -1,7 +1,5 @@
 import axios from "axios";
-
+import { API_URL } from "../../constants";
 export const getSectors = () => {
-  return axios
-    .get("http://localhost:5000/sectors")
-    .then((result) => result.data);
+  return axios.get(`${API_URL}/sectors`).then((result) => result.data);
 };

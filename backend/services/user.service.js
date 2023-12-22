@@ -21,6 +21,19 @@ const getUserById = catchAsyncError(async (id) => {
   return userData;
 });
 
+const updateUserById = async (id, name, sectors, agreed) => {
+  const userData = new UserDataModel.findByIdAndUpdate(id, {
+    $set: {
+      agreed,
+      name,
+      sectors,
+    },
+  });
+
+  const savedUserData = await userData.save();
+  return savedUserData;
+};
+
 const getAllUsers = catchAsyncError(async () => {
   const users = await UserDataModel.find({});
   return users;
@@ -29,5 +42,6 @@ const getAllUsers = catchAsyncError(async () => {
 module.exports = {
   createUser,
   getUserById,
+  updateUserById,
   getAllUsers,
 };

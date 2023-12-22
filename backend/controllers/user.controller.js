@@ -1,32 +1,57 @@
 const CustomError = require("../middleware/CustomError");
 const catchAsyncError = require("../middleware/catchAsyncError");
+const userService = require("../services/user.service");
 
-const createUser = catchAsyncError(async (name, sectors, agreed) => {
-  const userData = new UserDataModel({
+const createUser = catchAsyncError(async (req, res, next) => {
+  const { name, sectors, agreed } = req.body;
+
+  const savedUserData = await userService.createUser(name, sectors, agreed);
+
+  res.status(201).json({
+    success: true,
+    data: savedUserData,
+  });
+});
+
+const getUserById = catchAsyncError(async (req, res, next) => {
+  const userId = req.params.id;
+  const userData = await userService.getUserById(userId);
+
+  res.status(200).json({
+    success: true,
+    data: userData,
+  });
+});
+
+const updateUserById = catchAsyncError(async (req, res) => {
+  const { id, name, sectors, agreed } = req.body;
+
+  const updatedUserData = await userService.updateUserById(
+    id,
+    userId,
     name,
     sectors,
-    agreed,
+    agreed
+  );
+
+  res.status(200).json({
+    success: true,
+    data: updatedUserData,
   });
-
-  const savedUserData = await userData.save();
-  return savedUserData;
 });
 
-const getUserById = catchAsyncError(async (id) => {
-  const userData = await UserDataModel.findById(id);
-  if (!userData) {
-    throw new Error('User data not found');
-  }
-  return userData;
-});
+const getAllUsers = catchAsyncError(async (req, res) => {
+  const users = await userService.getAllUsers();
 
-const getAllUsers = catchAsyncError(async () => {
-  const users = await UserDataModel.find({});
-  return users;
+  res.status(200).json({
+    success: true,
+    data: users,
+  });
 });
 
 module.exports = {
   createUser,
   getUserById,
+  updateUserById,
   getAllUsers,
 };

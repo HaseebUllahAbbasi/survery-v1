@@ -10,4 +10,3 @@ const userData = new mongoose.Schema({
 const UserDataModel = mongoose.model("Todos", userData);
 
 module.exports = UserDataModel;
-a;
