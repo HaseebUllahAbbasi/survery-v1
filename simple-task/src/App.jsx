@@ -1,9 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { getSectors } from "./services/api/sector";
-import { getUsers } from "./services/api/user";
+import { createUser, getUsers, updateUser } from "./services/api/user";
+import Swal from "sweetalert2";
 
-const CustomSelect = ({ options, selectedValues, onChange }) => {
+const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
+  const [selectedOptions, setSelectedOptions] = useState(selectedValues);
+
+  const handleOptionChange = (event) => {
+    const newlySelected = Array.from(
+      event.target.selectedOptions,
+      (option) => option.value
+    );
+
+    const updatedSelection = [...selectedOptions];
+
+    // Check if any child is selected, then also select its parent
+    newlySelected.forEach((newSelection) => {
+      const option = options.find((opt) => opt._id === newSelection);
+      if (
+        option &&
+        option.parent &&
+        !updatedSelection.includes(option.parent)
+      ) {
+        updatedSelection.push(option.parent);
+      }
+    });
+
+    // Update the state and call the onChange callback
+    setSelectedOptions(updatedSelection);
+    onChange(updatedSelection);
+  };
+
   const renderOptions = (option, level) => {
     return (
       <React.Fragment key={option._id}>
@@ -20,19 +48,11 @@ const CustomSelect = ({ options, selectedValues, onChange }) => {
     );
   };
 
-  const handleOptionChange = (event) => {
-    const selectedOptions = Array.from(
-      event.target.selectedOptions,
-      (option) => option.value
-    );
-    onChange(selectedOptions);
-  };
-
   return (
     <select
       multiple
       size="5"
-      value={selectedValues}
+      value={selectedOptions}
       onChange={handleOptionChange}
     >
       {options?.map((option) => renderOptions(option, 0))}
@@ -42,10 +62,13 @@ const CustomSelect = ({ options, selectedValues, onChange }) => {
 
 const App = () => {
   // State for the form inputs
+  const [recordId, setRecordId] = useState();
   const [name, setName] = useState("");
   const [selectedSectors, setSelectedSectors] = useState([]);
   const [sessionId, setSessionId] = useState("");
   const [users, setUsers] = useState([]);
+  const [isChecked, setIsChecked] = useState(false);
+
   const [sectors, setSectors] = useState([]);
   // Options array
 
@@ -58,6 +81,10 @@ const App = () => {
     setUsers(users);
   };
 
+  const handleCheckboxChange = (event) => {
+    // Update the state with the new checked status
+    setIsChecked(event.target.checked);
+  };
   useEffect(() => {
     fetchSectors();
     fetchUsers();
@@ -91,10 +118,20 @@ const App = () => {
     setSelectedSectors(selectedOptions);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("Name:", name);
-    console.log("Selected Sectors:", selectedSectors);
+    if (recordId) {
+      const record = await updateUser(recordId, name, sectors, isChecked);
+      if (record.success) {
+        Swal.fire("Record Updated");
+      }
+      // console.log("update record");
+    } else {
+      const record = await createUser(name, sectors, isChecked);
+      setRecordId(record?.user._id);
+      Swal.fire("Record created");
+    }
+    fetchUsers();
   };
   useEffect(() => {
     if (name) sessionStorage.setItem("name", name);
@@ -106,30 +143,49 @@ const App = () => {
   }, [name, selectedSectors]);
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Name:
-        <input type="text" value={name} onChange={handleNameChange} />
-      </label>
-      <br />
-      <br />
-      <label>
-        Sectors:
-        <CustomSelect
-          options={sectors}
-          selectedValues={selectedSectors}
-          onChange={handleSectorChange}
-        />
-      </label>
-      <br />
-      <br />
-      <label>
-        <input type="checkbox" /> Agree to terms
-      </label>
-      <br />
-      <br />
-      <input type="submit" value="Save" />
-    </form>
+    <React.Fragment>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Name:
+          <input type="text" value={name} onChange={handleNameChange} />
+        </label>
+        <br />
+        <br />
+        <label>
+          Sectors:
+          <CustomSelect
+            options={sectors}
+            selectedValues={selectedSectors}
+            onChange={handleSectorChange}
+          />
+        </label>
+        <br />
+        <br />
+        <label>
+          <input
+            required
+            checked={isChecked}
+            onChange={handleCheckboxChange}
+            type="checkbox"
+          />
+          Agree to terms
+        </label>
+        <br />
+        <br />
+        <input type="submit" value="Save" />
+      </form>
+      <div>
+        {users.map((user, index) => (
+          <div style={{ border: "1px solid black" }} key={index}>
+            {JSON.stringify(user)}
+            <CustomSelect
+              options={sectors}
+              selectedValues={user.sectors}
+            ></CustomSelect>
+          </div>
+        ))}
+      </div>
+    </React.Fragment>
   );
 };
 
