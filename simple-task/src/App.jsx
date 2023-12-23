@@ -4,7 +4,14 @@ import { getSectors } from "./services/api/sector";
 import { createUser, getUsers, updateUser } from "./services/api/user";
 import Swal from "sweetalert2";
 
-const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
+const CustomSelect = ({
+  options,
+  selectedValues,
+  onChange = () => {
+    alert("called ");
+  },
+  disabled = false,
+}) => {
   const [selectedOptions, setSelectedOptions] = useState(selectedValues);
 
   const handleOptionChange = (event) => {
@@ -15,7 +22,6 @@ const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
 
     const updatedSelection = [...selectedOptions];
 
-    // Check if any child is selected, then also select its parent
     newlySelected.forEach((newSelection) => {
       const option = options.find((opt) => opt._id === newSelection);
       if (
@@ -54,6 +60,8 @@ const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
       size="5"
       value={selectedOptions}
       onChange={handleOptionChange}
+      disabled={disabled}
+      className="border p-2 rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
     >
       {options?.map((option) => renderOptions(option, 0))}
     </select>
@@ -61,7 +69,6 @@ const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
 };
 
 const App = () => {
-  // State for the form inputs
   const [recordId, setRecordId] = useState();
   const [name, setName] = useState("");
   const [selectedSectors, setSelectedSectors] = useState([]);
@@ -70,7 +77,6 @@ const App = () => {
   const [isChecked, setIsChecked] = useState(false);
 
   const [sectors, setSectors] = useState([]);
-  // Options array
 
   const fetchSectors = async () => {
     const sectors = await getSectors();
@@ -82,7 +88,6 @@ const App = () => {
   };
 
   const handleCheckboxChange = (event) => {
-    // Update the state with the new checked status
     setIsChecked(event.target.checked);
   };
   useEffect(() => {
@@ -96,7 +101,6 @@ const App = () => {
     if (storedSessionId) {
       setSessionId(storedSessionId);
     } else {
-      // If no session ID exists, create a new one
       const newSessionId = uuidv4();
       setSessionId(newSessionId);
       sessionStorage.setItem("sessionId", newSessionId);
@@ -143,15 +147,24 @@ const App = () => {
   }, [name, selectedSectors]);
 
   return (
-    <React.Fragment>
-      <form onSubmit={handleSubmit}>
-        <label>
+    <div className="p-4 md:p-8 lg:p-12 xl:p-16">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-md mx-auto mt-8 p-4 bg-white shadow-md rounded-md transition duration-300 transform hover:shadow-lg"
+      >
+        {" "}
+        <label className="block mb-2">
           Name:
-          <input type="text" value={name} onChange={handleNameChange} />
+          <input
+            className="mt-1 p-2 w-full border rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+          />
         </label>
         <br />
         <br />
-        <label>
+        <label className="block mb-4">
           Sectors:
           <CustomSelect
             options={sectors}
@@ -167,25 +180,35 @@ const App = () => {
             checked={isChecked}
             onChange={handleCheckboxChange}
             type="checkbox"
+            className="mr-2"
           />
-          Agree to terms
+          <span className="text-gray-700">Agree to terms</span>
         </label>
         <br />
         <br />
-        <input type="submit" value="Save" />
+        <input
+          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+          type="submit"
+          value="Save"
+        />
       </form>
-      <div>
+      <div className="mt-8 space-y-4">
         {users.map((user, index) => (
-          <div style={{ border: "1px solid black" }} key={index}>
-            {JSON.stringify(user)}
+          <div
+            className="border p-4 bg-gray-100 rounded-md transition duration-300 transform hover:scale-105"
+            key={index}
+          >
+            <div className="text-xl font-semibold">{user.name}</div>
+
             <CustomSelect
               options={sectors}
               selectedValues={user.sectors}
+              disabled={true}
             ></CustomSelect>
           </div>
         ))}
       </div>
-    </React.Fragment>
+    </div>
   );
 };
 
