@@ -7,6 +7,6 @@ const userData = new mongoose.Schema({
   },
   agreed: { type: Boolean, required: [true, "please enter the agreed status"] },
 });
-const UserDataModel = mongoose.model("Todos", userData);
+const UserDataModel = mongoose.model("usersData", userData);
 
 module.exports = UserDataModel;
