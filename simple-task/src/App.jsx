@@ -109,7 +109,12 @@ const App = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (recordId) {
-      const record = await updateUser(recordId, name, sectors, isChecked);
+      const record = await updateUser(
+        recordId,
+        name,
+        selectedSectors,
+        isChecked
+      );
       if (record.success) {
         Swal.fire("Record Updated");
       }
