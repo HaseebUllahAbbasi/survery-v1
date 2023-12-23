@@ -8,36 +8,10 @@ const CustomSelect = ({
   options,
   selectedValues,
   onChange = () => {
-    alert("called ");
+    return;
   },
   disabled = false,
 }) => {
-  const [selectedOptions, setSelectedOptions] = useState(selectedValues);
-
-  const handleOptionChange = (event) => {
-    const newlySelected = Array.from(
-      event.target.selectedOptions,
-      (option) => option.value
-    );
-
-    const updatedSelection = [...selectedOptions];
-
-    newlySelected.forEach((newSelection) => {
-      const option = options.find((opt) => opt._id === newSelection);
-      if (
-        option &&
-        option.parent &&
-        !updatedSelection.includes(option.parent)
-      ) {
-        updatedSelection.push(option.parent);
-      }
-    });
-
-    // Update the state and call the onChange callback
-    setSelectedOptions(updatedSelection);
-    onChange(updatedSelection);
-  };
-
   const renderOptions = (option, level) => {
     return (
       <React.Fragment key={option._id}>
@@ -54,14 +28,22 @@ const CustomSelect = ({
     );
   };
 
+  const handleOptionChange = (event) => {
+    const selectedOptions = Array.from(
+      event.target.selectedOptions,
+      (option) => option.value
+    );
+    onChange(selectedOptions);
+  };
+
   return (
     <select
+      className="w-full  border p-2 rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
       multiple
       size="5"
-      value={selectedOptions}
+      value={selectedValues}
       onChange={handleOptionChange}
       disabled={disabled}
-      className="border p-2 rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
     >
       {options?.map((option) => renderOptions(option, 0))}
     </select>
@@ -77,7 +59,9 @@ const App = () => {
   const [isChecked, setIsChecked] = useState(false);
 
   const [sectors, setSectors] = useState([]);
-
+  const createNewSession = () => {
+    setRecordId();
+  };
   const fetchSectors = async () => {
     const sectors = await getSectors();
     setSectors(sectors);
@@ -131,7 +115,7 @@ const App = () => {
       }
       // console.log("update record");
     } else {
-      const record = await createUser(name, sectors, isChecked);
+      const record = await createUser(name, selectedSectors, isChecked);
       setRecordId(record?.user._id);
       Swal.fire("Record created");
     }
@@ -147,34 +131,37 @@ const App = () => {
   }, [name, selectedSectors]);
 
   return (
-    <div className="p-4 md:p-8 lg:p-12 xl:p-16">
+    <div className="p-4 md:p-8 lg:p-12 xl:p-16 bg-gradient-to-r from-blue-500 to-purple-500 h-[100vh]">
+      <h1 className="text-2xl font-extrabold text-center text-gradient bg-clip-text from-pink-500 to-purple-700 leading-tight">
+        <span className="block">
+          Please enter your name and pick the Sectors you are currently involved
+          in.
+        </span>
+      </h1>
+
       <form
         onSubmit={handleSubmit}
-        className="max-w-md mx-auto mt-8 p-4 bg-white shadow-md rounded-md transition duration-300 transform hover:shadow-lg"
+        className="max-w-md mx-auto mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 shadow-md rounded-md transition duration-300 transform hover:shadow-lg"
       >
-        {" "}
-        <label className="block mb-2">
-          Name:
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Full Name:</label>
           <input
-            className="mt-1 p-2 w-full border rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
             type="text"
             value={name}
             onChange={handleNameChange}
+            placeholder="Mike"
           />
-        </label>
-        <br />
-        <br />
-        <label className="block mb-4">
-          Sectors:
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Select Sectors:</label>
           <CustomSelect
             options={sectors}
             selectedValues={selectedSectors}
             onChange={handleSectorChange}
           />
-        </label>
-        <br />
-        <br />
-        <label>
+        </div>
+        <div className="mb-4 flex items-center">
           <input
             required
             checked={isChecked}
@@ -182,29 +169,44 @@ const App = () => {
             type="checkbox"
             className="mr-2"
           />
-          <span className="text-gray-700">Agree to terms</span>
-        </label>
-        <br />
-        <br />
-        <input
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
-          type="submit"
-          value="Save"
-        />
-      </form>
-      <div className="mt-8 space-y-4">
-        {users.map((user, index) => (
-          <div
-            className="border p-4 bg-gray-100 rounded-md transition duration-300 transform hover:scale-105"
-            key={index}
+          <span className="text-gray-700">
+            I agree to the terms and conditions
+          </span>
+        </div>
+        <div className="flex justify-around">
+          <button
+            type="submit"
+            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
           >
-            <div className="text-xl font-semibold">{user.name}</div>
+            Save
+          </button>
 
-            <CustomSelect
-              options={sectors}
-              selectedValues={user.sectors}
-              disabled={true}
-            ></CustomSelect>
+          {recordId && (
+            <button
+              onClick={createNewSession}
+              className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+            >
+              Create New Session
+            </button>
+          )}
+        </div>
+      </form>
+
+      <div className="flex flex-wrap  mt-5">
+        {users.map((user, index) => (
+          <div key={index} className="lg:w-1/4 md:w-1/3 sm:w-1/2 w-full p-1 ">
+            <div className=" cursor-pointer bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 my-1 shadow-md p-6 rounded-md duration-300 transform hover:shadow-lg hover:rounded-lg transition-all">
+              <div className="text-xl font-semibold mb-4 text-center">
+                {user.name}
+              </div>
+              <div className="text-center cursor-pointer">
+                <CustomSelect
+                  options={sectors}
+                  selectedValues={user.sectors}
+                  disabled={true}
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
