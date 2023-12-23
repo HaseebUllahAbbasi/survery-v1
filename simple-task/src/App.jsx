@@ -4,34 +4,14 @@ import { getSectors } from "./services/api/sector";
 import { createUser, getUsers, updateUser } from "./services/api/user";
 import Swal from "sweetalert2";
 
-const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
-  const [selectedOptions, setSelectedOptions] = useState(selectedValues);
-
-  const handleOptionChange = (event) => {
-    const newlySelected = Array.from(
-      event.target.selectedOptions,
-      (option) => option.value
-    );
-
-    const updatedSelection = [...selectedOptions];
-
-    // Check if any child is selected, then also select its parent
-    newlySelected.forEach((newSelection) => {
-      const option = options.find((opt) => opt._id === newSelection);
-      if (
-        option &&
-        option.parent &&
-        !updatedSelection.includes(option.parent)
-      ) {
-        updatedSelection.push(option.parent);
-      }
-    });
-
-    // Update the state and call the onChange callback
-    setSelectedOptions(updatedSelection);
-    onChange(updatedSelection);
-  };
-
+const CustomSelect = ({
+  options,
+  selectedValues,
+  onChange = () => {
+    return;
+  },
+  disabled = false,
+}) => {
   const renderOptions = (option, level) => {
     return (
       <React.Fragment key={option._id}>
@@ -48,12 +28,22 @@ const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
     );
   };
 
+  const handleOptionChange = (event) => {
+    const selectedOptions = Array.from(
+      event.target.selectedOptions,
+      (option) => option.value
+    );
+    onChange(selectedOptions);
+  };
+
   return (
     <select
+      className="w-full  border p-2 rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
       multiple
       size="5"
-      value={selectedOptions}
+      value={selectedValues}
       onChange={handleOptionChange}
+      disabled={disabled}
     >
       {options?.map((option) => renderOptions(option, 0))}
     </select>
@@ -61,7 +51,6 @@ const CustomSelect = ({ options, selectedValues, onChange = () => {} }) => {
 };
 
 const App = () => {
-  // State for the form inputs
   const [recordId, setRecordId] = useState();
   const [name, setName] = useState("");
   const [selectedSectors, setSelectedSectors] = useState([]);
@@ -70,8 +59,9 @@ const App = () => {
   const [isChecked, setIsChecked] = useState(false);
 
   const [sectors, setSectors] = useState([]);
-  // Options array
-
+  const createNewSession = () => {
+    setRecordId();
+  };
   const fetchSectors = async () => {
     const sectors = await getSectors();
     setSectors(sectors);
@@ -82,7 +72,6 @@ const App = () => {
   };
 
   const handleCheckboxChange = (event) => {
-    // Update the state with the new checked status
     setIsChecked(event.target.checked);
   };
   useEffect(() => {
@@ -96,7 +85,6 @@ const App = () => {
     if (storedSessionId) {
       setSessionId(storedSessionId);
     } else {
-      // If no session ID exists, create a new one
       const newSessionId = uuidv4();
       setSessionId(newSessionId);
       sessionStorage.setItem("sessionId", newSessionId);
@@ -127,7 +115,7 @@ const App = () => {
       }
       // console.log("update record");
     } else {
-      const record = await createUser(name, sectors, isChecked);
+      const record = await createUser(name, selectedSectors, isChecked);
       setRecordId(record?.user._id);
       Swal.fire("Record created");
     }
@@ -143,49 +131,86 @@ const App = () => {
   }, [name, selectedSectors]);
 
   return (
-    <React.Fragment>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Name:
-          <input type="text" value={name} onChange={handleNameChange} />
-        </label>
-        <br />
-        <br />
-        <label>
-          Sectors:
+    <div className="p-4 md:p-8 lg:p-12 xl:p-16 bg-gradient-to-r from-blue-500 to-purple-500 h-[100vh]">
+      <h1 className="text-2xl font-extrabold text-center text-gradient bg-clip-text from-pink-500 to-purple-700 leading-tight">
+        <span className="block">
+          Please enter your name and pick the Sectors you are currently involved
+          in.
+        </span>
+      </h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-md mx-auto mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 shadow-md rounded-md transition duration-300 transform hover:shadow-lg"
+      >
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Full Name:</label>
+          <input
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+            placeholder="Mike"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Select Sectors:</label>
           <CustomSelect
             options={sectors}
             selectedValues={selectedSectors}
             onChange={handleSectorChange}
           />
-        </label>
-        <br />
-        <br />
-        <label>
+        </div>
+        <div className="mb-4 flex items-center">
           <input
             required
             checked={isChecked}
             onChange={handleCheckboxChange}
             type="checkbox"
+            className="mr-2"
           />
-          Agree to terms
-        </label>
-        <br />
-        <br />
-        <input type="submit" value="Save" />
+          <span className="text-gray-700">
+            I agree to the terms and conditions
+          </span>
+        </div>
+        <div className="flex justify-around">
+          <button
+            type="submit"
+            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+          >
+            Save
+          </button>
+
+          {recordId && (
+            <button
+              onClick={createNewSession}
+              className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+            >
+              Create New Session
+            </button>
+          )}
+        </div>
       </form>
-      <div>
+
+      <div className="flex flex-wrap  mt-5">
         {users.map((user, index) => (
-          <div style={{ border: "1px solid black" }} key={index}>
-            {JSON.stringify(user)}
-            <CustomSelect
-              options={sectors}
-              selectedValues={user.sectors}
-            ></CustomSelect>
+          <div key={index} className="lg:w-1/4 md:w-1/3 sm:w-1/2 w-full p-1 ">
+            <div className=" cursor-pointer bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 my-1 shadow-md p-6 rounded-md duration-300 transform hover:shadow-lg hover:rounded-lg transition-all">
+              <div className="text-xl font-semibold mb-4 text-center">
+                {user.name}
+              </div>
+              <div className="text-center cursor-pointer">
+                <CustomSelect
+                  options={sectors}
+                  selectedValues={user.sectors}
+                  disabled={true}
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
-    </React.Fragment>
+    </div>
   );
 };
 
